@@ -4,6 +4,7 @@ import Directory from './Directory';
 import CampsiteInfo from './CampsiteInfo';
 import About from './About';
 import Contact from './Contact';
+import Favorites from './Favorites';
 import { View, Platform, StyleSheet, Text, ScrollView, Image } from 'react-native';
 import { Icon } from 'react-native-elements';
 import { createStackNavigator, createDrawerNavigator, DrawerItems} from 'react-navigation';
@@ -146,6 +147,30 @@ const ContactNavigator = createStackNavigator(
     }
 );
 
+const FavoritesNavigator = createStackNavigator(
+    {
+        Favorites: { screen: Favorites }
+    },
+    {
+        navigationOptions: ({navigation}) => ({
+            headerStyle: {
+                backgroundColor: '#5637DD'
+            },
+            headerTintColor: '#fff',
+            headerTitleStyle: {
+                color: '#fff'
+            },
+            headerLeft: <Icon
+                name='heart'
+                type='font-awesome'
+                iconStyle={styles.stackIcon}
+                onPress={() => navigation.toggleDrawer()}
+            />
+        })
+    }
+);
+  
+
 const CustomDrawerContentComponent = props => (
     <ScrollView>
         <SafeAreaView 
@@ -196,6 +221,7 @@ const MainNavigator = createDrawerNavigator(
                 )
             }
         },
+        
 
     Reservation: {
         screen: ReservationNavigator,
@@ -206,8 +232,10 @@ const MainNavigator = createDrawerNavigator(
                     name='tree'
                     type='font-awesome'
                     size={24}
-                    color={tintColor}
+                    color='coral'
+                   
                 />
+                
             )
         }
     },
@@ -235,13 +263,29 @@ const MainNavigator = createDrawerNavigator(
                         name='address-card'
                         type='font-awesome'
                         size={24}
-                        color='red'
+                        color={tintColor}
                     />
                 )
             }
+        },
+
+
+    Favorites: {
+        screen: FavoritesNavigator,
+        navigationOptions: {
+            drawerLabel: 'My Favorites',
+            drawerIcon: ({tintColor}) => (
+                <Icon
+                    name='heart'
+                    type='font-awesome'
+                    size={24}
+                    color='red'
+                />
+            )
         }
-        
     },
+        
+},
     
     {
             drawerBackgroundColor: '#CEC8FF',
