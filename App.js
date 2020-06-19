@@ -2,17 +2,24 @@ import React from 'react';
 import Main from './components/Main';
 import { Provider } from 'react-redux';
 import { ConfigureStore } from './redux/configureStore';
+import { PersistGate } from 'redux-persist/es/integration/react';
+import Loading from './components/Loading';
 
-const store = ConfigureStore();
+const { persistor, store } = ConfigureStore();
+
+//disable yellow warnings on emulator
+console.disableYellowBox= true
 
 export default function App() {
-  console.disableYellowBox= true
-  
-  return (
-    <Provider store={store}>
-      <Main />
-    </Provider>
-        );
+    return (
+        <Provider store={store}>
+            <PersistGate
+                loading={<Loading />}
+                persistor={persistor}>
+                <Main />
+            </PersistGate>
+        </Provider>
+    );
 }
 
 

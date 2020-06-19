@@ -1,6 +1,9 @@
 import React, { Component } from 'react';
-import { Text, View, ScrollView, StyleSheet, Picker, Switch, Button, Modal  } from 'react-native';
+import { Text, View, StyleSheet, Picker, Switch, Button,  Alert  } from 'react-native';
 import DatePicker from 'react-native-datepicker';
+import * as Permissions from 'expo-permissions';
+import { Notifications } from 'expo';
+import * as Animatable from 'react-native-animatable';
 
 
 class Reservation extends Component {
@@ -11,7 +14,7 @@ class Reservation extends Component {
             campers: 1,
             hikeIn: false,
             date: '',
-            showModal: false
+            
         };
     }
 
@@ -19,28 +22,74 @@ class Reservation extends Component {
         title: 'Reserve Campsite'
     }
 
-    toggleModal() {
-        this.setState({showModal: !this.state.showModal});
-    }
-
     handleReservation() {
         console.log(JSON.stringify(this.state));
-        this.toggleModal();
     }
 
     resetForm() {
         this.setState({
             campers: 1,
             hikeIn: false,
-            date: '',
-            showModal: false
-        });
+            date: ''
+            
+        });  
     }
- 
+
+    async obtainNotificationPermission() {
+        const permission = await Permissions.getAsync(Permissions.USER_FACING_NOTIFICATIONS);
+        if (permission.status !== 'granted') {
+            const permission = await Permissions.askAsync(Permissions.USER_FACING_NOTIFICATIONS);
+            if (permission.status !== 'granted') {
+                Alert.alert('Permission not granted to show notifications');
+            }
+            return permission;
+        }
+        return permission;
+    }
+
+    async presentLocalNotification(date) {
+        const permission = await this.obtainNotificationPermission();
+        if (permission.status === 'granted') {
+            Notifications.presentLocalNotificationAsync({
+                title: 'Your Campsite Reservation Search',
+                body: 'Search for ' + date + ' requested'
+            });
+        }
+    }
+
 
     render() {
+
+       const resAlert = () =>
+            Alert.alert(
+                'Begin Search?',
+                ` Number of Campers: ${this.state.campers}\n HikeIn?: ${this.state.hikeIn}\n Date: ${this.state.date}`,
+                                        
+                [
+                    {
+                        text: 'Cancel',
+                        style: 'cancel',
+                        onPress: () =>  {
+                            console.log('Search Cancelled'),
+                            this.resetForm()}
+                                                
+                    },
+                {
+                    text: 'OK',
+                    onPress: () => { 
+                        console.log(JSON.stringify(this.state)),
+                        this.presentLocalNotification(this.state.date);
+                        this.resetForm();
+                    }
+                
+                }
+            ],
+            { cancelable: false }
+
+        );
+        
         return (
-            <ScrollView>
+            <Animatable.View animation='zoomIn' duration={2000} delay={1000}>
                 <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Number of Campers</Text>
                     <Picker
@@ -55,6 +104,7 @@ class Reservation extends Component {
                         <Picker.Item label='6' value='6' />
                     </Picker>
                 </View>
+
                 <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Hike-In?</Text>
                     <Switch
@@ -64,6 +114,7 @@ class Reservation extends Component {
                         onValueChange={value => this.setState({hikeIn: value})}>
                     </Switch>
                 </View>
+
                 <View style={styles.formRow}>
                     <Text style={styles.formLabel}>Date</Text>
                     <DatePicker
@@ -89,39 +140,20 @@ class Reservation extends Component {
                         onDateChange={date => {this.setState({date: date})}}
                     />
                 </View>
+
                 <View style={styles.formRow}>
-                    <Button
-                        onPress={() => this.handleReservation()}
+                    <Button 
+                        style={{marginTop: 30}}                
                         title='Search Campsite'
                         color='#5cb85c'
-                        accessibilityLabel='Tap me to search for available campsites to reserve'
-                    />
-                </View>
-
-                <Modal
-                    animationType={'slide'}
-                    transparent={false}
-                    visible={this.state.showModal}
-                    onRequestClose={() => this.toggleModal()}>
-                    <View style={styles.modal}>
-                        <Text style={styles.modalTitle}>Search Campsite Reservations</Text>
-                        <Text style={styles.modalText}>Number of Campers: {this.state.campers}</Text>
-                        <Text style={styles.modalText}>Hike-In?: {this.state.hikeIn ? 'Yes' : 'No'}</Text>
-                        <Text style={styles.modalText}>Date: {this.state.date}</Text>
-                        <Button
-                            onPress={() => {
-                                this.toggleModal();
-                                this.resetForm();
-                            }}
-                            color='#5637DD'
-                            title='Close'
-                        />
-                    </View>
-                </Modal>
-            </ScrollView>
+                        accessibilityLabel='Tap me to search for available campsites to reserve'                       
+                        onPress={resAlert} 
+                        />                   
+                </View>             
+            </Animatable.View>
         );
-    }
-}
+     }
+   }
 
 const styles = StyleSheet.create({
     formRow: {
@@ -129,7 +161,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         flex: 1,
         flexDirection: 'row',
-        margin: 20
+        margin: 20,
     },
     formLabel: {
         fontSize: 18,
@@ -137,6 +169,7 @@ const styles = StyleSheet.create({
     },
     formItem: {
         flex: 1
+        
     },
     modal: { 
         justifyContent: 'center',
@@ -154,6 +187,7 @@ const styles = StyleSheet.create({
         fontSize: 18,
         margin: 10
     }
+
 });
 
 export default Reservation;
